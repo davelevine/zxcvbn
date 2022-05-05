@@ -1,0 +1,1 @@
+const e={key:"v-b33c5e4c",path:"/guide/comparison/",title:"Comparison",lang:"en-US",frontmatter:{},excerpt:"",headers:[],git:{updatedTime:1635937516e3,contributors:[{name:"MrWook",email:"mr.wook@web.de",commits:2}]},filePathRelative:"guide/comparison/README.md"};export{e as data};
