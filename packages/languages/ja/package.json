@@ -1,10 +1,10 @@
 {
-  "name": "@zxcvbn-ts/matcher-pwned",
-  "version": "2.0.4",
+  "name": "@zxcvbn-ts/language-ja",
+  "version": "2.1.0",
   "main": "dist/index.js",
   "module": "dist/index.esm.js",
   "types": "dist/index.d.ts",
-  "description": "HaveIBeenPwned Matcher for zxcvbn-ts",
+  "description": "The Japanese language package for zxcvbn-ts",
   "license": "MIT",
   "homepage": "https://github.com/zxcvbn-ts/zxcvbn",
   "repository": {
@@ -19,20 +19,10 @@
   "publishConfig": {
     "access": "public"
   },
-  "dependencies": {
-    "@zxcvbn-ts/core": "^2.0.3"
-  },
   "keywords": [
-    "pwned",
-    "password",
-    "passphrase",
-    "security",
-    "quality",
-    "estimation",
-    "pattern",
-    "cracking",
-    "scoring",
-    "haveibeenpwned",
-    "zxcvbn-ts"
+    "zxcvbn",
+    "language",
+    "translation",
+    "japanese"
   ]
 }
