@@ -1,17 +1,17 @@
 {
-  "name": "@zxcvbn-ts/language-pl",
-  "version": "2.2.0",
+  "name": "@zxcvbn-ts/language-id",
+  "version": "2.1.0",
   "main": "dist/index.js",
   "module": "dist/index.esm.js",
   "types": "dist/index.d.ts",
-  "description": "The Polish language package for zxcvbn-ts",
+  "description": "The Indonesia language package for zxcvbn-ts",
   "license": "MIT",
   "homepage": "https://github.com/zxcvbn-ts/zxcvbn",
   "repository": {
     "type": "git",
     "url": "https://github.com/zxcvbn-ts/zxcvbn.git"
   },
-  "author": "oskar-gmerek",
+  "author": "zxcvbn-ts",
   "files": [
     "dist",
     "src"
@@ -23,8 +23,6 @@
     "zxcvbn",
     "language",
     "translation",
-    "polish",
-    "poland",
-    "pl"
+    "indonesia"
   ]
 }

@@ -1,39 +1,50 @@
 import axios from 'axios'
 import iconv from 'iconv-lite'
 
-type Options = {
+export interface SimpleListGeneratorOptions {
   splitter: string
   commentPrefixes: string[]
   removeDuplicates: boolean
   trimWhitespaces: boolean
   toLowerCase: boolean
   encoding?: string
+  occurrenceSeparator: string
   hasOccurrences: boolean
   minOccurrences: number
   minLength: number
+  clearLine: Function
 }
 
-const defaultOptions: Options = {
+export const SimpleListGeneratorDefaultOptions: SimpleListGeneratorOptions = {
   splitter: '\n',
   commentPrefixes: ['#', '//'],
   removeDuplicates: true,
   trimWhitespaces: true,
   toLowerCase: true,
+  occurrenceSeparator: ' ',
   hasOccurrences: false,
   minOccurrences: 500,
   minLength: 2,
+  clearLine: (entry: string) => entry,
 }
 
-export default class SimpleListGenerator {
+interface ConstructorOptions {
+  options: SimpleListGeneratorOptions
+  url: string
+}
+export default class SimpleListGenerator<
+  Options extends SimpleListGeneratorOptions = SimpleListGeneratorOptions,
+> {
   public data: string[] = []
 
   protected readonly url: string
 
-  protected readonly options: Options
+  protected options: Options
 
-  constructor(url: string, options: any) {
+  constructor({ url, options }: ConstructorOptions) {
     this.url = url
-    this.options = { ...defaultOptions }
+    // @ts-ignore
+    this.options = { ...SimpleListGeneratorDefaultOptions }
     Object.assign(this.options, options)
   }
 
@@ -60,17 +71,25 @@ export default class SimpleListGenerator {
   protected filterOccurrences() {
     if (this.options.hasOccurrences) {
       console.info('Removing occurrence info')
+      const cleanRegex = new RegExp(`${this.options.occurrenceSeparator}+`, 'g')
       this.data = this.data
         .filter((entry) => {
           const occurrence: number = parseInt(
-            entry.replace(/  +/g, ' ').split(' ')[1],
+            entry.replace(cleanRegex, ' ').split(' ')[1],
             10,
           )
           return occurrence >= this.options.minOccurrences
         })
         .map((entry) => {
-          return entry.replace(/  +/g, ' ').split(' ')[0]
+          return entry.replace(cleanRegex, ' ').split(' ')[0]
         })
+    }
+  }
+
+  protected clearLine() {
+    if (this.options.clearLine) {
+      console.info('Clear line')
+      this.data = this.data.map((line) => this.options.clearLine(line))
     }
   }
 
@@ -110,6 +129,7 @@ export default class SimpleListGenerator {
     console.info('Downloading')
     const data = await this.getData()
     this.data = data.split(this.options.splitter)
+    this.clearLine()
     this.filterOccurrences()
     this.commentPrefixes()
     this.trimWhitespaces()

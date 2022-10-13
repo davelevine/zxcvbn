@@ -21,6 +21,16 @@ export interface LanguageList {
   }
 }
 
+const polishFirstnamesOptions = {
+  hasOccurrences: true,
+  minOccurrences: 200,
+  splitter: '\r\n',
+  clearLine: (line: String) => {
+    const lineArray = line.split(',')
+    return `${lineArray[0]} ${lineArray[2]}`
+  },
+}
+
 export default {
   'en': {
     commonWords: {
@@ -45,19 +55,33 @@ export default {
     },
     maleFirstnames: {
       source:
-        'https://raw.githubusercontent.com/oskar-gmerek/polish_database/main/male_first_names_poland.csv',
+        'https://api.dane.gov.pl/resources/36411,lista-imion-meskich-w-rejestrze-pesel-stan-na-24012022-imie-pierwsze/csv',
+      options: polishFirstnamesOptions,
     },
     femaleFirstnames: {
       source:
-        'https://raw.githubusercontent.com/oskar-gmerek/polish_database/main/female_first_names_poland.csv',
+        'https://api.dane.gov.pl/resources/36412,lista-imion-zenskich-w-rejestrze-pesel-stan-na-24012022-imie-pierwsze/csv',
+      options: polishFirstnamesOptions,
     },
     maleLastnames: {
       source:
-        'https://raw.githubusercontent.com/oskar-gmerek/polish_database/main/male_last_names_poland.csv',
+        'https://api.dane.gov.pl/resources/36401,nazwiska-meskie-stan-na-2022-01-27/csv',
+      options: {
+        hasOccurrences: true,
+        occurrenceSeparator: ',',
+        splitter: '\r\n',
+        minOccurrences: 200,
+      },
     },
     femaleLastnames: {
       source:
-        'https://raw.githubusercontent.com/oskar-gmerek/polish_database/main/female_last_names_poland.csv',
+        'https://api.dane.gov.pl/resources/38772,nazwiska-zenskie-stan-na-2022-01-27/csv',
+      options: {
+        hasOccurrences: true,
+        occurrenceSeparator: ',',
+        splitter: '\r\n',
+        minOccurrences: 200,
+      },
     },
   },
   'de': {
@@ -110,6 +134,7 @@ export default {
         url: 'https://statbel.fgov.be/sites/default/files/files/documents/bevolking/5.10%20Namen%20en%20voornamen/5.10.1%20Familienamen/Familienamen_2020.xlsx',
         column: 5,
         row: 2,
+        minOccurrences: 50,
       },
     },
   },
@@ -123,33 +148,33 @@ export default {
       generator: ExcelGenerator,
       customList: true,
       options: {
-        url: 'https://www.avoindata.fi/data/dataset/57282ad6-3ab1-48fb-983a-8aba5ff8d29a/resource/08c89936-a230-42e9-a9fc-288632e234f5/download/etunimitilasto-2022-02-07-dvv.xlsx',
+        url: 'https://www.avoindata.fi/data/dataset/57282ad6-3ab1-48fb-983a-8aba5ff8d29a/resource/08c89936-a230-42e9-a9fc-288632e234f5/download/etunimitilasto-2022-08-04-dvv.xlsx',
         column: 1,
         row: 2,
         sheetName: 'Miehet kaikki',
-        minOccurrences: 3000,
+        minOccurrences: 50,
       },
     },
     femaleFirstnames: {
       generator: ExcelGenerator,
       customList: true,
       options: {
-        url: 'https://www.avoindata.fi/data/dataset/57282ad6-3ab1-48fb-983a-8aba5ff8d29a/resource/08c89936-a230-42e9-a9fc-288632e234f5/download/etunimitilasto-2022-02-07-dvv.xlsx',
+        url: 'https://www.avoindata.fi/data/dataset/57282ad6-3ab1-48fb-983a-8aba5ff8d29a/resource/08c89936-a230-42e9-a9fc-288632e234f5/download/etunimitilasto-2022-08-04-dvv.xlsx',
         column: 1,
         row: 2,
         sheetName: 'Naiset kaikki',
-        minOccurrences: 3000,
+        minOccurrences: 50,
       },
     },
     lastnames: {
       generator: ExcelGenerator,
       customList: true,
       options: {
-        url: 'https://www.avoindata.fi/data/dataset/57282ad6-3ab1-48fb-983a-8aba5ff8d29a/resource/957d19a5-b87a-4c4d-8595-49c22d9d3c58/download/sukunimitilasto-2022-02-07-dvv.xlsx',
+        url: 'https://www.avoindata.fi/data/dataset/57282ad6-3ab1-48fb-983a-8aba5ff8d29a/resource/957d19a5-b87a-4c4d-8595-49c22d9d3c58/download/sukunimitilasto-2022-08-04-dvv.xlsx',
         column: 1,
         row: 2,
         sheetName: 'Nimet',
-        minOccurrences: 2000,
+        minOccurrences: 50,
       },
     },
   },
@@ -173,13 +198,28 @@ export default {
       generator: TxtGenerator,
       customList: true,
       options: {
-        url: 'https://www.insee.fr/fr/statistiques/fichier/2540004/nat2019_csv.zip',
+        url: 'https://www.insee.fr/fr/statistiques/fichier/2540004/nat2021_csv.zip',
         occurrenceColumn: 3,
         valueColumn: 1,
         separator: ';',
         row: 2,
         minOccurrences: 100,
       },
+    },
+  },
+  'id': {
+    commonWords: {
+      source:
+        'https://github.com/hermitdave/FrequencyWords/raw/master/content/2018/id/id_50k.txt',
+      options: { hasOccurrences: true },
+    },
+    firstnames: {
+      source:
+        'https://gist.githubusercontent.com/bagaswastu/35c80cdd8c32ca0b6aafa119e80e93ef/raw/13c57d71a3eaea0f59823eca5d22d1fb270aa56c/indonesia_names.txt',
+    },
+    lastnames: {
+      source:
+        'https://gist.githubusercontent.com/bagaswastu/35c80cdd8c32ca0b6aafa119e80e93ef/raw/13c57d71a3eaea0f59823eca5d22d1fb270aa56c/indonesia_names.txt',
     },
   },
   'es-es': {
