@@ -23,20 +23,25 @@ export class Options {
 
   rankedDictionaries: RankedDictionaries = {}
 
+  rankedDictionariesMaxWordSize: Record<string, number> = {}
+
   translations: TranslationKeys = translationKeys
 
   graphs: OptionsGraph = {}
-
-  availableGraphs: string[] = []
 
   useLevenshteinDistance: boolean = false
 
   levenshteinThreshold: number = 2
 
+  l33tMaxSubstitutions: number = 100
+
+  maxLength: number = 256
+
   constructor() {
     this.setRankedDictionaries()
   }
 
+  // eslint-disable-next-line max-statements
   setOptions(options: OptionsType = {}) {
     if (options.l33tTable) {
       this.l33tTable = options.l33tTable
@@ -62,6 +67,14 @@ export class Options {
 
     if (options.levenshteinThreshold !== undefined) {
       this.levenshteinThreshold = options.levenshteinThreshold
+    }
+
+    if (options.l33tMaxSubstitutions !== undefined) {
+      this.l33tMaxSubstitutions = options.l33tMaxSubstitutions
+    }
+
+    if (options.maxLength !== undefined) {
+      this.maxLength = options.maxLength
     }
   }
 
@@ -92,10 +105,26 @@ export class Options {
 
   setRankedDictionaries() {
     const rankedDictionaries: RankedDictionaries = {}
+    const rankedDictionariesMaxWorkSize: Record<string, number> = {}
     Object.keys(this.dictionary).forEach((name) => {
       rankedDictionaries[name] = this.getRankedDictionary(name)
+      rankedDictionariesMaxWorkSize[name] =
+        this.getRankedDictionariesMaxWordSize(name)
     })
     this.rankedDictionaries = rankedDictionaries
+    this.rankedDictionariesMaxWordSize = rankedDictionariesMaxWorkSize
+  }
+
+  getRankedDictionariesMaxWordSize(name: string) {
+    const data = this.dictionary[name].map((el) => {
+      if (typeof el !== 'string') {
+        return el.toString().length
+      }
+      return el.length
+    })
+    const result = data.length === 0 ? 0 : Math.max(...data)
+
+    return result
   }
 
   getRankedDictionary(name: string) {
@@ -130,6 +159,8 @@ export class Options {
     }
 
     this.rankedDictionaries.userInputs = this.getRankedDictionary('userInputs')
+    this.rankedDictionariesMaxWordSize.userInputs =
+      this.getRankedDictionariesMaxWordSize('userInputs')
   }
 
   public addMatcher(name: string, matcher: Matcher) {

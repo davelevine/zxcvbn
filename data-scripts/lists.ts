@@ -11,6 +11,7 @@ export interface LanguageListEntry {
   options?: {
     [key: string]: any
   }
+  // eslint-disable-next-line @typescript-eslint/ban-types
   generator?: Function
   customList?: boolean
 }
@@ -25,7 +26,7 @@ const polishFirstnamesOptions = {
   hasOccurrences: true,
   minOccurrences: 200,
   splitter: '\r\n',
-  clearLine: (line: String) => {
+  clearLine: (line: string) => {
     const lineArray = line.split(',')
     return `${lineArray[0]} ${lineArray[2]}`
   },
@@ -213,11 +214,7 @@ export default {
         'https://github.com/hermitdave/FrequencyWords/raw/master/content/2018/id/id_50k.txt',
       options: { hasOccurrences: true },
     },
-    firstnames: {
-      source:
-        'https://gist.githubusercontent.com/bagaswastu/35c80cdd8c32ca0b6aafa119e80e93ef/raw/13c57d71a3eaea0f59823eca5d22d1fb270aa56c/indonesia_names.txt',
-    },
-    lastnames: {
+    names: {
       source:
         'https://gist.githubusercontent.com/bagaswastu/35c80cdd8c32ca0b6aafa119e80e93ef/raw/13c57d71a3eaea0f59823eca5d22d1fb270aa56c/indonesia_names.txt',
     },

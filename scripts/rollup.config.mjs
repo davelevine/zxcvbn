@@ -3,16 +3,19 @@ import babel from '@rollup/plugin-babel'
 import commonjs from '@rollup/plugin-commonjs'
 import typescript from '@rollup/plugin-typescript'
 import del from 'rollup-plugin-delete'
-// TODO commented because of ./vendor/fastest-levenshtein.ts
-// import nodeResolve from '@rollup/plugin-node-resolve'
-import json from './jsonPlugin'
+import nodeResolve from '@rollup/plugin-node-resolve'
+import json from './jsonPlugin.mjs'
+import fs from 'fs'
 
 const packagePath = process.cwd()
-// eslint-disable-next-line import/no-dynamic-require
-const pkg = require(path.join(packagePath, 'package.json'))
 
 let generateCounter = 0
-const generateConfig = (type) => {
+const generateConfig = async (type) => {
+  const pkgString = fs.readFileSync(
+    path.join(packagePath, 'package.json'),
+    'utf-8',
+  )
+  const pkg = JSON.parse(pkgString)
   let typescriptOptions = {
     declaration: false,
   }
@@ -24,6 +27,7 @@ const generateConfig = (type) => {
     entryFileNames: '[name].js',
     assetFileNames: '[name].js',
     sourcemap: true,
+    preserveModules: type !== 'iife',
   }
   if (type === 'esm') {
     typescriptOptions = {
@@ -57,12 +61,12 @@ const generateConfig = (type) => {
 
     generateCounter += 1
   }
-  // TODO commented because of ./vendor/fastest-levenshtein.ts
-  // if (type === 'iife') {
-  //   pluginsOnlyOnce.push(nodeResolve({ resolveOnly: ['fastest-levenshtein'] }))
-  // } else {
-  //   external.push('fastest-levenshtein')
-  // }
+
+  if (type === 'iife') {
+    pluginsOnlyOnce.push(nodeResolve({ resolveOnly: ['fastest-levenshtein'] }))
+  } else {
+    external.push('fastest-levenshtein')
+  }
 
   return {
     input: ['./src/index.ts'],
@@ -79,12 +83,11 @@ const generateConfig = (type) => {
       }),
     ],
     external,
-    preserveModules: type !== 'iife',
   }
 }
 
-export default [
+export default Promise.all([
   generateConfig('esm'),
   generateConfig('cjs'),
   generateConfig('iife'),
-]
+])

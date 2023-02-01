@@ -36,14 +36,20 @@ export class TxtGenerator extends SimpleListGenerator<Options> {
     Object.assign(this.options, options)
   }
 
-  // eslint-disable-next-line max-statements
+  // eslint-disable-next-line max-statements,complexity
   public async run() {
     // Download the file
     console.info('Fetching file')
-    const response = await axios.get(this.options.url, {
-      responseType: 'arraybuffer',
-    })
-    const data = new Uint8Array(response.data)
+    let data
+    try {
+      const response = await axios.get(this.options.url, {
+        responseType: 'arraybuffer',
+      })
+      data = new Uint8Array(response.data)
+    } catch (error: any) {
+      console.info('!!!!!! ERROR: getData had an error !!!!!!', error.message)
+      return null
+    }
 
     let content = []
 
