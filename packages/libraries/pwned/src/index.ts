@@ -4,20 +4,18 @@ import MatchPwned from './matching'
 import scoring from './scoring'
 import FeedbackFactory from './feedback'
 import haveIBeenPwned from './haveIBeenPwned'
-import { FetchApi } from './types'
+import { FetchApi, MatcherPwnedFactoryConfig } from './types'
 
-const matcherPwnedFactory = (
+export const matcherPwnedFactory = (
   universalFetch: FetchApi,
   options: Options,
-  url?: string,
+  config: MatcherPwnedFactoryConfig = {},
 ): Matcher => {
   return {
-    Matching: MatchPwned(universalFetch, url),
+    Matching: MatchPwned(universalFetch, config),
     feedback: FeedbackFactory(options),
     scoring,
   }
 }
-
-export default matcherPwnedFactory
 
 export { haveIBeenPwned }

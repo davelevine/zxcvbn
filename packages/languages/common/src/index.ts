@@ -1,10 +1,7 @@
 import adjacencyGraphs from './adjacencyGraphs.json'
 import passwords from './passwords.json'
+import diceware from './diceware.json'
 
-export default {
-  dictionary: {
-    passwords,
-  },
+const dictionary = { passwords, diceware }
 
-  adjacencyGraphs,
-}
+export { dictionary, adjacencyGraphs }
