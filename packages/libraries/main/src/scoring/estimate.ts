@@ -63,6 +63,7 @@ const getScoring = (name: string, match: MatchExtended | MatchEstimated) => {
 // ------------------------------------------------------------------------------
 // guess estimation -- one function per match pattern ---------------------------
 // ------------------------------------------------------------------------------
+// eslint-disable-next-line complexity, max-statements
 export default (match: MatchExtended | MatchEstimated, password: string) => {
   const extraData: LooseObject = {}
   // a match's guess estimate doesn't change. cache it.

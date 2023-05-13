@@ -45,6 +45,7 @@ export default class ApiGenerator extends SimpleListGenerator<Options> {
     }
   }
 
+  // eslint-disable-next-line max-statements
   public async run(): Promise<string[] | null> {
     console.info('Downloading')
     let data = []
@@ -61,6 +62,7 @@ export default class ApiGenerator extends SimpleListGenerator<Options> {
     this.trimWhitespaces()
     this.convertToLowerCase()
     this.splitCompoundNames()
+    this.normalizeDiacritics()
     this.removeDuplicates()
     this.filterMinLength()
     return this.data

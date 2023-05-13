@@ -7,9 +7,10 @@ import regexMatcher from './matcher/regex/feedback'
 import repeatMatcher from './matcher/repeat/feedback'
 import sequenceMatcher from './matcher/sequence/feedback'
 import spatialMatcher from './matcher/spatial/feedback'
+import separatorMatcher from './matcher/separator/feedback'
 
 const defaultFeedback = {
-  warning: '',
+  warning: null,
   suggestions: [],
 }
 
@@ -30,10 +31,11 @@ class Feedback {
     repeat: repeatMatcher,
     sequence: sequenceMatcher,
     spatial: spatialMatcher,
+    separator: separatorMatcher,
   }
 
   defaultFeedback: FeedbackType = {
-    warning: '',
+    warning: null,
     suggestions: [],
   }
 
@@ -60,12 +62,9 @@ class Feedback {
     let feedback = this.getMatchFeedback(longestMatch, sequence.length === 1)
     if (feedback !== null && feedback !== undefined) {
       feedback.suggestions.unshift(extraFeedback)
-      if (feedback.warning == null) {
-        feedback.warning = ''
-      }
     } else {
       feedback = {
-        warning: '',
+        warning: null,
         suggestions: [extraFeedback],
       }
     }

@@ -3,6 +3,7 @@ import l33tTableDefault from './data/l33tTable'
 import { REGEXEN } from './data/const'
 import { DictionaryReturn } from './matcher/dictionary/scoring'
 import Matching from './Matching'
+import { PasswordChanges } from './matcher/dictionary/variants/matching/unmunger/getCleanPasswords'
 
 export type TranslationKeys = typeof translationKeys
 export type L33tTableDefault = typeof l33tTableDefault
@@ -19,6 +20,7 @@ export type Pattern =
   | 'regex'
   | 'date'
   | 'bruteforce'
+  | 'separator'
   | string
 
 export type DictionaryNames =
@@ -59,7 +61,7 @@ export interface DictionaryMatch extends Match {
 }
 
 export interface L33tMatch extends DictionaryMatch {
-  sub: LooseObject
+  subs: PasswordChanges[]
   subDisplay: string
 }
 
@@ -101,6 +103,10 @@ export interface BruteForceMatch extends Match {
   pattern: 'bruteforce'
 }
 
+export interface SeparatorMatch extends Match {
+  pattern: 'separator'
+}
+
 export type MatchExtended =
   | DictionaryMatch
   | L33tMatch
@@ -110,6 +116,7 @@ export type MatchExtended =
   | RegexMatch
   | DateMatch
   | BruteForceMatch
+  | SeparatorMatch
   | Match
 
 export interface Estimate {
@@ -143,7 +150,7 @@ export interface CrackTimesDisplay {
 }
 
 export interface FeedbackType {
-  warning: string
+  warning: string | null
   suggestions: string[]
 }
 

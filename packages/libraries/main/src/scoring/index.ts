@@ -12,6 +12,7 @@ const scoringHelper = {
   password: '',
   optimal: {} as any,
   excludeAdditive: false,
+  separatorRegex: undefined as RegExp | null | undefined,
   fillArray(size: number, valueType: 'object' | 'array') {
     const result: typeof valueType extends 'array' ? string[] : LooseObject[] =
       []
@@ -78,6 +79,7 @@ const scoringHelper = {
     // see if a single bruteforce match spanning the passwordCharIndex-prefix is optimal.
     let match = this.makeBruteforceMatch(0, passwordCharIndex)
     this.update(match, 1)
+
     for (let i = 1; i <= passwordCharIndex; i += 1) {
       // generate passwordCharIndex bruteforce matches, spanning from (i=1, j=passwordCharIndex) up to (i=passwordCharIndex, j=passwordCharIndex).
       // see if adding these new matches to any of the sequences in optimal[i-1]
