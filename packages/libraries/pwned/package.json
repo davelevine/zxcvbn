@@ -1,6 +1,6 @@
 {
   "name": "@zxcvbn-ts/matcher-pwned",
-  "version": "3.0.1",
+  "version": "3.0.3",
   "main": "dist/index.js",
   "module": "dist/index.esm.js",
   "types": "dist/index.d.ts",
@@ -16,11 +16,14 @@
     "dist",
     "src"
   ],
+  "browser": {
+    "crypto": false
+  },
   "publishConfig": {
     "access": "public"
   },
   "dependencies": {
-    "@zxcvbn-ts/core": "^3.0.1"
+    "@zxcvbn-ts/core": "^3.0.3"
   },
   "keywords": [
     "pwned",

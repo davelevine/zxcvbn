@@ -12,71 +12,148 @@ export interface PasswordChanges {
   substitution: string
 }
 
+export type IndexedPasswordChanges = PasswordChanges & { i: number }
+
 export interface PasswordWithSubs {
   password: string
-  changes: PasswordChanges[]
+  changes: IndexedPasswordChanges[]
 }
 
-const getAllSubCombosHelper = ({
-  substr,
-  buffer,
-  limit,
-  trieRoot,
-}: GetAllSubCombosHelperOptions): PasswordWithSubs[] => {
-  const finalPasswords: PasswordWithSubs[] = []
+interface HelperOptions {
+  onlyFullSub: boolean
+  isFullSub: boolean
+  index: number
+  subIndex: number
+  changes: IndexedPasswordChanges[]
+}
 
-  // eslint-disable-next-line max-statements
-  const helper = (index: number, changes: PasswordChanges[]): void => {
-    if (finalPasswords.length >= limit) {
-      return
-    }
+class CleanPasswords {
+  private substr: string
 
-    if (index === substr.length) {
-      finalPasswords.push({ password: buffer.join(''), changes })
-      return
-    }
+  private buffer: string[]
 
-    const firstChar = substr.charAt(index)
+  private limit: number
 
-    // first, generate all combos without doing a substitution at this index
-    buffer.push(firstChar)
-    helper(index + 1, changes)
-    buffer.pop()
+  private trieRoot: TrieNode
 
-    // next, exhaust all possible substitutions at this index
-    let cur = trieRoot
-    for (let i = index; i < substr.length; i += 1) {
-      const character = substr.charAt(i)
+  private finalPasswords: PasswordWithSubs[] = []
+
+  constructor({
+    substr,
+    buffer,
+    limit,
+    trieRoot,
+  }: GetAllSubCombosHelperOptions) {
+    this.substr = substr
+    this.buffer = buffer
+    this.limit = limit
+    this.trieRoot = trieRoot
+  }
+
+  private getAllPossibleSubsAtIndex(index: number) {
+    const nodes: TrieNode[] = []
+    let cur = this.trieRoot
+    for (let i = index; i < this.substr.length; i += 1) {
+      const character = this.substr.charAt(i)
       cur = cur.getChild(character)!
       if (!cur) {
-        return
+        break
       }
+      nodes.push(cur)
+    }
+    return nodes
+  }
 
+  // eslint-disable-next-line complexity,max-statements
+  private helper({
+    onlyFullSub,
+    isFullSub,
+    index,
+    subIndex,
+    changes,
+  }: HelperOptions): void {
+    if (this.finalPasswords.length >= this.limit) {
+      return
+    }
+
+    if (index === this.substr.length) {
+      if (onlyFullSub === isFullSub) {
+        this.finalPasswords.push({ password: this.buffer.join(''), changes })
+      }
+      return
+    }
+
+    // first, exhaust all possible substitutions at this index
+    const nodes: TrieNode[] = [...this.getAllPossibleSubsAtIndex(index)]
+
+    let hasSubs = false
+    // iterate backward to get wider substitutions first
+    for (let i = index + nodes.length - 1; i >= index; i -= 1) {
+      const cur = nodes[i - index]
       if (cur.isTerminal()) {
+        hasSubs = true
         const subs = cur.subs!
         // eslint-disable-next-line no-restricted-syntax
         for (const sub of subs) {
-          buffer.push(sub)
+          this.buffer.push(sub)
           const newSubs = changes.concat({
+            i: subIndex,
             letter: sub,
             substitution: cur.parents.join(''),
           })
 
           // recursively build the rest of the string
-          helper(i + 1, newSubs)
+          this.helper({
+            onlyFullSub,
+            isFullSub,
+            index: i + 1,
+            subIndex: subIndex + sub.length,
+            changes: newSubs,
+          })
           // backtrack by ignoring the added postfix
-          buffer.splice(-sub.length)
-          if (finalPasswords.length >= limit) {
+          this.buffer.pop()
+          if (this.finalPasswords.length >= this.limit) {
             return
           }
         }
       }
     }
+    // next, generate all combos without doing a substitution at this index
+    // if a partial substitution is requested or there are no substitutions at this index
+    if (!onlyFullSub || !hasSubs) {
+      const firstChar = this.substr.charAt(index)
+      this.buffer.push(firstChar)
+      this.helper({
+        onlyFullSub,
+        isFullSub: isFullSub && !hasSubs,
+        index: index + 1,
+        subIndex: subIndex + 1,
+        changes,
+      })
+      this.buffer.pop()
+    }
   }
 
-  helper(0, [])
+  getAll() {
+    // only full substitution
+    this.helper({
+      onlyFullSub: true,
+      isFullSub: true,
+      index: 0,
+      subIndex: 0,
+      changes: [],
+    })
+    // only partial substitution
+    this.helper({
+      onlyFullSub: false,
+      isFullSub: true,
+      index: 0,
+      subIndex: 0,
+      changes: [],
+    })
 
-  return finalPasswords
+    return this.finalPasswords
+  }
 }
 
 const getCleanPasswords = (
@@ -84,11 +161,13 @@ const getCleanPasswords = (
   limit: number,
   trieRoot: TrieNode,
 ): PasswordWithSubs[] => {
-  return getAllSubCombosHelper({
+  const helper = new CleanPasswords({
     substr: string,
     buffer: [],
     limit,
     trieRoot,
   })
+
+  return helper.getAll()
 }
 export default getCleanPasswords

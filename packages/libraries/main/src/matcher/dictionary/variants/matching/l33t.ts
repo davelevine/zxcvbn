@@ -2,25 +2,47 @@ import { zxcvbnOptions } from '../../../../Options'
 import { DictionaryMatch, L33tMatch } from '../../../../types'
 import { DefaultMatch } from '../../types'
 import getCleanPasswords, {
+  PasswordChanges,
   PasswordWithSubs,
 } from './unmunger/getCleanPasswords'
 
-const getExtras = (passwordWithSubs: PasswordWithSubs, token: string) => {
-  const usedChanges = passwordWithSubs.changes.filter((changes) => {
-    const sub = changes.substitution
-    return token.indexOf(sub) !== -1
+const getExtras = (
+  passwordWithSubs: PasswordWithSubs,
+  i: number,
+  j: number,
+) => {
+  const previousChanges = passwordWithSubs.changes.filter((changes) => {
+    return changes.i < i
   })
+  const iUnsubbed = previousChanges.reduce((value, change) => {
+    return value - change.letter.length + change.substitution.length
+  }, i)
+  const usedChanges = passwordWithSubs.changes.filter((changes) => {
+    return changes.i >= i && changes.i <= j
+  })
+  const jUnsubbed = usedChanges.reduce(
+    (value, change) => {
+      return value - change.letter.length + change.substitution.length
+    },
+    j - i + iUnsubbed,
+  )
+  const filtered: PasswordChanges[] = []
   const subDisplay: string[] = []
-  const filtered = usedChanges.filter((value, index, self) => {
-    const existingIndex = self.findIndex((t) => {
+  usedChanges.forEach((value) => {
+    const existingIndex = filtered.findIndex((t) => {
       return t.letter === value.letter && t.substitution === value.substitution
     })
-    return index === existingIndex
-  })
-  filtered.forEach((value) => {
-    subDisplay.push(`${value.substitution} -> ${value.letter}`)
+    if (existingIndex < 0) {
+      filtered.push({
+        letter: value.letter,
+        substitution: value.substitution,
+      })
+      subDisplay.push(`${value.substitution} -> ${value.letter}`)
+    }
   })
   return {
+    i: iUnsubbed,
+    j: jUnsubbed,
     subs: filtered,
     subDisplay: subDisplay.join(', '),
   }
@@ -55,7 +77,7 @@ class MatchL33t {
     )
     let hasFullMatch = false
     let isFullSubstitution = true
-    subbedPasswords.reverse().forEach((subbedPassword) => {
+    subbedPasswords.forEach((subbedPassword) => {
       if (hasFullMatch) {
         return
       }
@@ -69,8 +91,8 @@ class MatchL33t {
         if (!hasFullMatch) {
           hasFullMatch = match.i === 0 && match.j === password.length - 1
         }
-        const token = password.slice(match.i, +match.j + 1 || 9e9)
-        const extras = getExtras(subbedPassword, token)
+        const extras = getExtras(subbedPassword, match.i, match.j)
+        const token = password.slice(extras.i, +extras.j + 1 || 9e9)
         const newMatch: L33tMatch = {
           ...match,
           l33t: true,
