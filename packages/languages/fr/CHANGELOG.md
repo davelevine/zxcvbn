@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [3.0.2](https://github.com/jeromes80/zxcvbn/compare/@zxcvbn-ts/language-fr@3.0.1...@zxcvbn-ts/language-fr@3.0.2) (2023-09-17)
+
+### Bug Fixes
+
+- **docs:** resolve typo ([3785f0a](https://github.com/jeromes80/zxcvbn/commit/3785f0a0ef5400dbcbd666512370a67cb651c46d))
+
 ## [3.0.1](https://github.com/jeromes80/zxcvbn/compare/@zxcvbn-ts/language-fr@3.0.0...@zxcvbn-ts/language-fr@3.0.1) (2023-05-10)
 
 ### Bug Fixes
@@ -21,7 +27,7 @@ Instead of importing language packages with
 `import package from '@zxcvbn-ts/language-en'`
 
 You will now have to import it either like this
-`import { dictionary, translation } from '@zxcvbn-ts/language-en'`
+`import { dictionary, translations } from '@zxcvbn-ts/language-en'`
 
 or like this
 `import * as package from '@zxcvbn-ts/language-en'`
