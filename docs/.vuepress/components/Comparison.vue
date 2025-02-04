@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div v-if="loading">Currently comparing passwords...</div>
+    <div v-if="isLoading"><b>Currently comparing passwords...</b></div>
     <table class="result" v-else>
       <tr>
         <td></td>
@@ -32,91 +32,80 @@
   </div>
 </template>
 
-<script>
-import {
-  zxcvbnAsync as zxcvbnTsAsync,
-  zxcvbnOptions,
-} from '../../../packages/libraries/main/dist/index.esm'
-import * as zxcvbnCommonPackage from '../../../packages/languages/common/dist/index.esm'
-import * as zxcvbnEnPackage from '../../../packages/languages/en/dist/index.esm'
+<script setup>
+import { ZxcvbnFactory } from '../../../packages/libraries/main/dist/index'
+import * as zxcvbnCommonPackage from '../../../packages/languages/common/dist/index'
+import * as zxcvbnEnPackage from '../../../packages/languages/en/dist/index'
 import zxcvbn from 'zxcvbn'
+import { ref, onMounted } from 'vue'
 
-export default {
-  name: 'ZxcvbnComparison',
-  props: {
-    result: {
-      type: Object,
-      default() {
-        return {}
+defineProps(['result'])
+
+const passwords = [
+  '1q2w3e4r5t',
+  '1Q2w3e4r5t',
+  '1q2w3e4r5T',
+  'abcdefg123',
+  'TESTERINO',
+  'aaaaaaa',
+  'Daniel',
+  '1234qwer',
+  '1234qwe',
+  '1234qwert',
+  'password',
+  '2010abc',
+  'abcabcabcabc',
+  'qwer',
+  'P4$$w0rd',
+  'aA!1',
+  'dgo9dsghasdoghi8/!&IT/§(ihsdhf8o7o',
+  'AZERTY',
+  'zxcftzuio',
+  'aoeuidh',
+  'Tiger@0177',
+]
+
+const data = ref([])
+const isLoading = ref(true)
+const zxcvbnTs = ref(null)
+
+onMounted(() => {
+  setOptions()
+  setTimeout(() => {
+    setData()
+  }, 1000)
+})
+
+const setOptions = () => {
+  const options = {
+    dictionary: {
+      ...zxcvbnCommonPackage.dictionary,
+      ...zxcvbnEnPackage.dictionary,
+    },
+    graphs: zxcvbnCommonPackage.adjacencyGraphs,
+    useLevenshteinDistance: true,
+  }
+  zxcvbnTs.value = new ZxcvbnFactory(options)
+}
+
+const setData = async () => {
+  isLoading.value = true
+  for (const password of passwords) {
+    const zxcvbnResult = zxcvbn(password)
+    const zxcvbnTsResult = await zxcvbnTs.value.checkAsync(password)
+    console.log(zxcvbnResult, zxcvbnTsResult)
+    data.value.push({
+      password: password,
+      zxcvbn: {
+        guessesLog10: zxcvbnResult.guesses_log10,
+        score: zxcvbnResult.score,
       },
-    },
-  },
-  data() {
-    return {
-      passwords: [
-        '1q2w3e4r5t',
-        '1Q2w3e4r5t',
-        '1q2w3e4r5T',
-        'abcdefg123',
-        'TESTERINO',
-        'aaaaaaa',
-        'Daniel',
-        '1234qwer',
-        '1234qwe',
-        '1234qwert',
-        'password',
-        '2010abc',
-        'abcabcabcabc',
-        'qwer',
-        'P4$$w0rd',
-        'aA!1',
-        'dgo9dsghasdoghi8/!&IT/§(ihsdhf8o7o',
-        'AZERTY',
-        'zxcftzuio',
-        'aoeuidh',
-        'Tiger@0177',
-      ],
-      data: [],
-      loading: true,
-    }
-  },
-  async mounted() {
-    this.setOptions()
-    this.setData()
-  },
-  methods: {
-    setOptions() {
-      const options = {
-        dictionary: {
-          ...zxcvbnCommonPackage.dictionary,
-          ...zxcvbnEnPackage.dictionary,
-        },
-        graphs: zxcvbnCommonPackage.adjacencyGraphs,
-        useLevenshteinDistance: true,
-      }
-      zxcvbnOptions.setOptions(options)
-    },
-
-    async setData() {
-      this.loading = true
-      for (const password of this.passwords) {
-        const zxcvbnResult = zxcvbn(password)
-        const zxcvbnTsResult = await zxcvbnTsAsync(password)
-        console.log(zxcvbnResult, zxcvbnTsResult)
-        this.data.push({
-          password: password,
-          zxcvbn: {
-            guessesLog10: zxcvbnResult.guesses_log10,
-            score: zxcvbnResult.score,
-          },
-          zxcvbnTs: {
-            guessesLog10: zxcvbnTsResult.guessesLog10,
-            score: zxcvbnTsResult.score,
-          },
-        })
-      }
-      this.loading = false
-    },
-  },
+      zxcvbnTs: {
+        guessesLog10: zxcvbnTsResult.guessesLog10,
+        score: zxcvbnTsResult.score,
+      },
+    })
+  }
+  isLoading.value = false
 }
 </script>

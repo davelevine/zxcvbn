@@ -1,5 +1,10 @@
-import { zxcvbnOptions } from './Options'
-import { CrackTimesDisplay, CrackTimesSeconds, Score } from './types'
+import Options from './Options'
+import {
+  CrackTimes,
+  CrackTimesSeconds,
+  Score,
+  TimeEstimationValues,
+} from './types'
 
 const SECOND = 1
 const MINUTE = SECOND * 60
@@ -19,64 +24,98 @@ const times = {
   century: CENTURY,
 }
 
+export const timeEstimationValuesDefaults: TimeEstimationValues = {
+  scoring: {
+    0: 1e3,
+    1: 1e6,
+    2: 1e8,
+    3: 1e10,
+  },
+  attackTime: {
+    onlineThrottlingXPerHour: 100,
+    onlineNoThrottlingXPerSecond: 10,
+    offlineSlowHashingXPerSecond: 1e4,
+    offlineFastHashingXPerSecond: 1e10,
+  },
+}
+
+export const checkTimeEstimationValues = (
+  timeEstimationValues: TimeEstimationValues,
+) => {
+  Object.entries(timeEstimationValues).forEach(([key, data]) => {
+    Object.entries(data).forEach(([subKey, value]) => {
+      // @ts-ignore
+      if (value < timeEstimationValuesDefaults[key][subKey]) {
+        throw new Error(
+          'Time estimation values are not to be allowed to be less than default',
+        )
+      }
+    })
+  })
+}
+
 /*
  * -------------------------------------------------------------------------------
  *  Estimates time for an attacker ---------------------------------------------------------------
  * -------------------------------------------------------------------------------
  */
-class TimeEstimates {
-  translate(displayStr: string, value: number | undefined) {
-    let key = displayStr
-    if (value !== undefined && value !== 1) {
-      key += 's'
-    }
-    const { timeEstimation } = zxcvbnOptions.translations
-    return timeEstimation[key as keyof typeof timeEstimation].replace(
-      '{base}',
-      `${value}`,
-    )
-  }
+export class TimeEstimates {
+  constructor(private options: Options) {}
 
-  estimateAttackTimes(guesses: number) {
-    const crackTimesSeconds: CrackTimesSeconds = {
-      onlineThrottling100PerHour: guesses / (100 / 3600),
-      onlineNoThrottling10PerSecond: guesses / 10,
-      offlineSlowHashing1e4PerSecond: guesses / 1e4,
-      offlineFastHashing1e10PerSecond: guesses / 1e10,
-    }
-    const crackTimesDisplay: CrackTimesDisplay = {
-      onlineThrottling100PerHour: '',
-      onlineNoThrottling10PerSecond: '',
-      offlineSlowHashing1e4PerSecond: '',
-      offlineFastHashing1e10PerSecond: '',
-    }
-    Object.keys(crackTimesSeconds).forEach((scenario) => {
-      const seconds = crackTimesSeconds[scenario as keyof CrackTimesSeconds]
-      crackTimesDisplay[scenario as keyof CrackTimesDisplay] =
-        this.displayTime(seconds)
-    })
+  public estimateAttackTimes(guesses: number) {
+    const crackTimesSeconds = this.calculateCrackTimesSeconds(guesses)
+    const crackTimes = Object.keys(crackTimesSeconds).reduce(
+      (previousValue, crackTime) => {
+        const usedScenario = crackTime as keyof CrackTimesSeconds
+        const seconds = crackTimesSeconds[usedScenario]
+        const { base, displayStr } = this.displayTime(seconds)
+
+        // eslint-disable-next-line no-param-reassign
+        previousValue[usedScenario] = {
+          base,
+          seconds,
+          display: this.translate(displayStr, base),
+        }
+        return previousValue
+      },
+      {} as CrackTimes,
+    )
     return {
-      crackTimesSeconds,
-      crackTimesDisplay,
+      crackTimes,
       score: this.guessesToScore(guesses),
     }
   }
 
-  guessesToScore(guesses: number): Score {
+  private calculateCrackTimesSeconds(guesses: number): CrackTimesSeconds {
+    const attackTimesOptions = this.options.timeEstimationValues.attackTime
+    return {
+      onlineThrottlingXPerHour:
+        guesses / (attackTimesOptions.onlineThrottlingXPerHour / 3600),
+      onlineNoThrottlingXPerSecond:
+        guesses / attackTimesOptions.onlineNoThrottlingXPerSecond,
+      offlineSlowHashingXPerSecond:
+        guesses / attackTimesOptions.offlineSlowHashingXPerSecond,
+      offlineFastHashingXPerSecond:
+        guesses / attackTimesOptions.offlineFastHashingXPerSecond,
+    }
+  }
+
+  private guessesToScore(guesses: number): Score {
+    const scoringOptions = this.options.timeEstimationValues.scoring
     const DELTA = 5
-    if (guesses < 1e3 + DELTA) {
+    if (guesses < scoringOptions[0] + DELTA) {
       // risky password: "too guessable"
       return 0
     }
-    if (guesses < 1e6 + DELTA) {
+    if (guesses < scoringOptions[1] + DELTA) {
       // modest protection from throttled online attacks: "very guessable"
       return 1
     }
-    if (guesses < 1e8 + DELTA) {
+    if (guesses < scoringOptions[2] + DELTA) {
       // modest protection from unthrottled online attacks: "somewhat guessable"
       return 2
     }
-    if (guesses < 1e10 + DELTA) {
+    if (guesses < scoringOptions[3] + DELTA) {
       // modest protection from offline attacks: "safely unguessable"
       // assuming a salted, slow hash function like bcrypt, scrypt, PBKDF2, argon, etc
       return 3
@@ -85,9 +124,9 @@ class TimeEstimates {
     return 4
   }
 
-  displayTime(seconds: number) {
+  private displayTime(seconds: number) {
     let displayStr = 'centuries'
-    let base
+    let base = null
     const timeKeys = Object.keys(times)
     const foundIndex = timeKeys.findIndex(
       (time) => seconds < times[time as keyof typeof times],
@@ -100,8 +139,21 @@ class TimeEstimates {
         displayStr = 'ltSecond'
       }
     }
-    return this.translate(displayStr, base)
+    return {
+      base,
+      displayStr,
+    }
+  }
+
+  private translate(displayStr: string, value: number | null) {
+    let key = displayStr
+    if (value !== null && value !== 1) {
+      key += 's'
+    }
+    const { timeEstimation } = this.options.translations
+    return timeEstimation[key as keyof typeof timeEstimation].replace(
+      '{base}',
+      `${value}`,
+    )
   }
 }
-
-export default TimeEstimates

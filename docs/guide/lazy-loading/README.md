@@ -9,27 +9,27 @@ Webpack supports lazy-loading with some configuration; check out the [documentat
 Here's how you import it:
 
 ```js
-import { zxcvbn } from '@zxcvbn-ts/core'
+import { ZxcvbnFactory } from '@zxcvbn-ts/core'
 ```
 
 This is how you lazy load dictionaries:
 
 ```js
 const loadOptions = async () => {
-  const zxcvbnCommonPackage = await import(
+  const { dictionary: commonDict, adjacencyGraphs } = await import(
     /* webpackChunkName: "zxcvbnCommonPackage" */ '@zxcvbn-ts/language-common'
   )
-  const zxcvbnEnPackage = await import(
+  const { dictionary: enDict, translations } = await import(
     /* webpackChunkName: "zxcvbnEnPackage" */ '@zxcvbn-ts/language-en'
   )
 
   return {
     dictionary: {
-      ...zxcvbnCommonPackage.default.dictionary,
-      ...zxcvbnEnPackage.default.dictionary,
+      ...commonDict,
+      ...enDict,
     },
-    graphs: zxcvbnCommonPackage.default.adjacencyGraphs,
-    translations: zxcvbnEnPackage.default.translations,
+    graphs: adjacencyGraphs,
+    translations: translations,
   }
 }
 ```
@@ -43,8 +43,9 @@ Somewhere in your application you can call the "loadOptions" function, then the 
 const run = async () => {
   const password = 'asdnlja978o'
   const options = await loadOptions()
-  zxcvbnOptions.setOptions(options)
-  const results = zxcvbn(password)
+
+  const zxcvbn = new ZxcvbnFactory(options)
+  const results = zxcvbn.check(password)
   console.log(results)
 }
 ```

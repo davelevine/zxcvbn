@@ -1,5 +1,106 @@
 # Migration
 
+## `zxcvbn-ts 3.x.x` to `zxcvbn-ts 4.x.x`
+
+### Move from singleton options to class based approach
+
+Old:
+```ts
+zxcvbnOptions.setOptions(options)
+
+zxcvbn(password)
+```
+
+New:
+
+```ts
+const zxcvbn = new ZxcvbnFactory(options, customMatcher)
+
+zxcvbn.check(password)
+```
+
+
+### Custom matcher setup changed
+
+This is an example for the pwned custom matcher changes. Generally the options doesn't need to be transferred anymore.
+
+Old:
+```ts
+zxcvbnOptions.setOptions(options)
+
+const pwnedOptions = {
+  url: string,
+  networkErrorHandler: Function
+}
+const matcherPwned = matcherPwnedFactory(crossFetch, zxcvbnOptions, pwnedOptions)
+zxcvbnOptions.addMatcher('pwned', matcherPwned)
+
+zxcvbn(password)
+```
+
+New:
+
+```ts
+const pwnedOptions = {
+  url: string,
+  networkErrorHandler: Function
+}
+const customMatcher = {
+  pwned: matcherPwnedFactory(fetch, pwnedOptions),
+}
+
+const zxcvbn = new ZxcvbnFactory(options, customMatcher)
+zxcvbn.check(password)
+```
+
+## Scoring thresholds naming changed in the output
+
+Old:
+```json
+{
+  crackTimesSeconds: {
+    offlineFastHashing1e10PerSecond: number,
+    offlineSlowHashing1e4PerSecond: number
+    onlineNoThrottling10PerSecond: number
+    onlineThrottling100PerHour: number
+  },
+  crackTimesDisplay: {
+    offlineFastHashing1e10PerSecond: string
+    offlineSlowHashing1e4PerSecond: string
+    onlineNoThrottling10PerSecond: string
+    onlineThrottling100PerHour: string
+  },
+}
+```
+
+New:
+```json
+{
+  crackTimes: {
+    onlineThrottlingXPerHour: {
+      base: number | null
+      seconds: number
+      display: string
+    }
+    onlineNoThrottlingXPerSecond: {
+      base: number | null
+      seconds: number
+      display: string
+    }
+    offlineSlowHashingXPerSecond: {
+      base: number | null
+      seconds: number
+      display: string
+    }
+    offlineFastHashingXPerSecond: {
+      base: number | null
+      seconds: number
+      display: string
+    }
+  },
+}
+```
+
 ## `zxcvbn-ts 2.x.x` to `zxcvbn-ts 3.x.x`
 
 ### language packages no longer have a default export

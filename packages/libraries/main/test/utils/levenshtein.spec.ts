@@ -1,9 +1,9 @@
-import * as zxcvbnCommonPackage from '../../../languages/common/src'
-import * as zxcvbnEnPackage from '../../../languages/en/src'
-import { zxcvbn, zxcvbnOptions } from '../src'
+import * as zxcvbnCommonPackage from '@zxcvbn-ts/language-common/src'
+import * as zxcvbnEnPackage from '@zxcvbn-ts/language-en/src'
+import { ZxcvbnFactory } from '../../src'
 
 describe('levenshtein', () => {
-  zxcvbnOptions.setOptions({
+  const zxcvbn = new ZxcvbnFactory({
     dictionary: {
       ...zxcvbnCommonPackage.dictionary,
       ...zxcvbnEnPackage.dictionary,
@@ -14,22 +14,34 @@ describe('levenshtein', () => {
   })
 
   it('should find levensteindistance', () => {
-    const result = zxcvbn('ishduehlduod83h4mfs8', ['ishduehgldueod83h4mfis8'])
+    const result = zxcvbn.check('ishduehlduod83h4mfs8', [
+      'ishduehgldueod83h4mfis8',
+    ])
     expect(result.calcTime).toBeDefined()
     result.calcTime = 0
     expect(result).toEqual({
       calcTime: 0,
-      crackTimesDisplay: {
-        offlineFastHashing1e10PerSecond: 'less than a second',
-        offlineSlowHashing1e4PerSecond: 'less than a second',
-        onlineNoThrottling10PerSecond: 'less than a second',
-        onlineThrottling100PerHour: '1 minute',
-      },
-      crackTimesSeconds: {
-        offlineFastHashing1e10PerSecond: 2e-10,
-        offlineSlowHashing1e4PerSecond: 0.0002,
-        onlineNoThrottling10PerSecond: 0.2,
-        onlineThrottling100PerHour: 72,
+      crackTimes: {
+        offlineFastHashingXPerSecond: {
+          base: null,
+          display: 'less than a second',
+          seconds: 2e-10,
+        },
+        offlineSlowHashingXPerSecond: {
+          base: null,
+          display: 'less than a second',
+          seconds: 0.0002,
+        },
+        onlineNoThrottlingXPerSecond: {
+          base: null,
+          display: 'less than a second',
+          seconds: 0.2,
+        },
+        onlineThrottlingXPerHour: {
+          base: 1,
+          display: '1 minute',
+          seconds: 72,
+        },
       },
       feedback: {
         suggestions: ['Add more words that are less common.'],
@@ -63,7 +75,7 @@ describe('levenshtein', () => {
   })
 
   it('should recognize a mistyped common English word', () => {
-    const result = zxcvbn('alaphant')
+    const result = zxcvbn.check('alaphant')
     expect(result.calcTime).toBeDefined()
     result.calcTime = 0
     expect(
@@ -73,17 +85,27 @@ describe('levenshtein', () => {
     ).toBeDefined()
     expect(result).toEqual({
       calcTime: 0,
-      crackTimesDisplay: {
-        offlineFastHashing1e10PerSecond: 'less than a second',
-        offlineSlowHashing1e4PerSecond: 'less than a second',
-        onlineNoThrottling10PerSecond: '35 seconds',
-        onlineThrottling100PerHour: '3 hours',
-      },
-      crackTimesSeconds: {
-        offlineFastHashing1e10PerSecond: 3.45e-8,
-        offlineSlowHashing1e4PerSecond: 0.0345,
-        onlineNoThrottling10PerSecond: 34.5,
-        onlineThrottling100PerHour: 12420,
+      crackTimes: {
+        offlineFastHashingXPerSecond: {
+          base: null,
+          display: 'less than a second',
+          seconds: 3.45e-8,
+        },
+        offlineSlowHashingXPerSecond: {
+          base: null,
+          display: 'less than a second',
+          seconds: 0.0345,
+        },
+        onlineNoThrottlingXPerSecond: {
+          base: 35,
+          display: '35 seconds',
+          seconds: 34.5,
+        },
+        onlineThrottlingXPerHour: {
+          base: 3,
+          display: '3 hours',
+          seconds: 12420,
+        },
       },
       feedback: {
         suggestions: ['Add more words that are less common.'],
@@ -117,10 +139,17 @@ describe('levenshtein', () => {
   })
 
   it('should respect threshold which is lower than the default 2', () => {
-    zxcvbnOptions.setOptions({
+    const customZxcvbn = new ZxcvbnFactory({
+      dictionary: {
+        ...zxcvbnCommonPackage.dictionary,
+        ...zxcvbnEnPackage.dictionary,
+      },
+      graphs: zxcvbnCommonPackage.adjacencyGraphs,
+      translations: zxcvbnEnPackage.translations,
+      useLevenshteinDistance: true,
       levenshteinThreshold: 1,
     })
-    const result = zxcvbn('eeleephaant')
+    const result = customZxcvbn.check('eeleephaant')
     expect(
       result.sequence.find(
         (sequenceItem) => sequenceItem.levenshteinDistance !== undefined,
@@ -129,10 +158,17 @@ describe('levenshtein', () => {
   })
 
   it('should respect threshold which is higher than the default 2', () => {
-    zxcvbnOptions.setOptions({
+    const customZxcvbn = new ZxcvbnFactory({
+      dictionary: {
+        ...zxcvbnCommonPackage.dictionary,
+        ...zxcvbnEnPackage.dictionary,
+      },
+      graphs: zxcvbnCommonPackage.adjacencyGraphs,
+      translations: zxcvbnEnPackage.translations,
+      useLevenshteinDistance: true,
       levenshteinThreshold: 3,
     })
-    const result = zxcvbn('eeleephaant')
+    const result = customZxcvbn.check('eeleephaant')
     expect(result.sequence.length).toStrictEqual(1)
     expect(result.sequence[0].levenshteinDistance).toBeDefined()
   })

@@ -1,11 +1,12 @@
 import * as zxcvbnCommonPackage from '../../../languages/common/src'
 import * as zxcvbnEnPackage from '../../../languages/en/src'
-import { zxcvbn, zxcvbnOptions } from '../src'
+import { ZxcvbnFactory } from '../src'
 import passwordTests from './helper/passwordTests'
 
 describe('main', () => {
+  let zxcvbn: ZxcvbnFactory
   beforeEach(() => {
-    zxcvbnOptions.setOptions({
+    zxcvbn = new ZxcvbnFactory({
       dictionary: {
         ...zxcvbnCommonPackage.dictionary,
         ...zxcvbnEnPackage.dictionary,
@@ -16,7 +17,7 @@ describe('main', () => {
   })
 
   it('should check without userInputs', () => {
-    const result = zxcvbn('test')
+    const result = zxcvbn.check('test')
     expect(result.calcTime).toBeDefined()
     result.calcTime = 0
     expect(result).toEqual({
@@ -42,17 +43,27 @@ describe('main', () => {
           guessesLog10: 2.0606978403536114,
         },
       ],
-      crackTimesSeconds: {
-        onlineThrottling100PerHour: 4176,
-        onlineNoThrottling10PerSecond: 11.6,
-        offlineSlowHashing1e4PerSecond: 0.0116,
-        offlineFastHashing1e10PerSecond: 1.16e-8,
-      },
-      crackTimesDisplay: {
-        onlineThrottling100PerHour: '1 hour',
-        onlineNoThrottling10PerSecond: '12 seconds',
-        offlineSlowHashing1e4PerSecond: 'less than a second',
-        offlineFastHashing1e10PerSecond: 'less than a second',
+      crackTimes: {
+        offlineFastHashingXPerSecond: {
+          base: null,
+          display: 'less than a second',
+          seconds: 1.16e-8,
+        },
+        offlineSlowHashingXPerSecond: {
+          base: null,
+          display: 'less than a second',
+          seconds: 0.0116,
+        },
+        onlineNoThrottlingXPerSecond: {
+          base: 12,
+          display: '12 seconds',
+          seconds: 11.6,
+        },
+        onlineThrottlingXPerHour: {
+          base: 1,
+          display: '1 hour',
+          seconds: 4176,
+        },
       },
       score: 0,
       feedback: {
@@ -63,24 +74,40 @@ describe('main', () => {
   })
 
   it('should check with userInputs', () => {
-    zxcvbnOptions.setOptions({
-      // @ts-ignore
-      dictionary: { userInputs: ['test', 12, true, []] },
+    const zxcvbnCustom = new ZxcvbnFactory({
+      dictionary: {
+        ...zxcvbnCommonPackage.dictionary,
+        ...zxcvbnEnPackage.dictionary,
+        // @ts-ignore
+        userInputs: ['test', 12, true, []],
+      },
+      graphs: zxcvbnCommonPackage.adjacencyGraphs,
+      translations: zxcvbnEnPackage.translations,
     })
-    const result = zxcvbn('test')
+    const result = zxcvbnCustom.check('test')
     result.calcTime = 0
     expect(result).toEqual({
-      crackTimesDisplay: {
-        offlineFastHashing1e10PerSecond: 'less than a second',
-        offlineSlowHashing1e4PerSecond: 'less than a second',
-        onlineNoThrottling10PerSecond: 'less than a second',
-        onlineThrottling100PerHour: '1 minute',
-      },
-      crackTimesSeconds: {
-        offlineFastHashing1e10PerSecond: 2e-10,
-        offlineSlowHashing1e4PerSecond: 0.0002,
-        onlineNoThrottling10PerSecond: 0.2,
-        onlineThrottling100PerHour: 72,
+      crackTimes: {
+        offlineFastHashingXPerSecond: {
+          base: null,
+          display: 'less than a second',
+          seconds: 2e-10,
+        },
+        offlineSlowHashingXPerSecond: {
+          base: null,
+          display: 'less than a second',
+          seconds: 0.0002,
+        },
+        onlineNoThrottlingXPerSecond: {
+          base: null,
+          display: 'less than a second',
+          seconds: 0.2,
+        },
+        onlineThrottlingXPerHour: {
+          base: 1,
+          display: '1 minute',
+          seconds: 72,
+        },
       },
       feedback: {
         suggestions: [zxcvbnEnPackage.translations.suggestions.anotherWord],
@@ -113,21 +140,31 @@ describe('main', () => {
   })
 
   it('should check with userInputs on the fly', () => {
-    const result = zxcvbn('onTheFly', ['onTheFly'])
+    const result = zxcvbn.check('onTheFly', ['onTheFly'])
     result.calcTime = 0
     expect(result).toEqual({
       calcTime: 0,
-      crackTimesDisplay: {
-        offlineFastHashing1e10PerSecond: 'less than a second',
-        offlineSlowHashing1e4PerSecond: 'less than a second',
-        onlineNoThrottling10PerSecond: '4 seconds',
-        onlineThrottling100PerHour: '22 minutes',
-      },
-      crackTimesSeconds: {
-        offlineFastHashing1e10PerSecond: 3.7e-9,
-        offlineSlowHashing1e4PerSecond: 0.0037,
-        onlineNoThrottling10PerSecond: 3.7,
-        onlineThrottling100PerHour: 1332,
+      crackTimes: {
+        offlineFastHashingXPerSecond: {
+          base: null,
+          display: 'less than a second',
+          seconds: 3.7e-9,
+        },
+        offlineSlowHashingXPerSecond: {
+          base: null,
+          display: 'less than a second',
+          seconds: 0.0037,
+        },
+        onlineNoThrottlingXPerSecond: {
+          base: 4,
+          display: '4 seconds',
+          seconds: 3.7,
+        },
+        onlineThrottlingXPerHour: {
+          base: 22,
+          display: '22 minutes',
+          seconds: 1332,
+        },
       },
       feedback: {
         suggestions: ['Add more words that are less common.'],
@@ -160,21 +197,21 @@ describe('main', () => {
 
   describe('attack vectors', () => {
     it('should not die while processing and have a appropriate calcTime for l33t attack', () => {
-      const result = zxcvbn(
+      const result = zxcvbn.check(
         '4@8({[</369&#!1/|0$5+7%2/4@8({[</369&#!1/|0$5+7%2/"',
       )
       expect(result.calcTime).toBeLessThan(2000)
     })
 
     it('should not die while processing and have a appropriate calcTime for l33t same value attack', () => {
-      const result = zxcvbn(
+      const result = zxcvbn.check(
         '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!',
       )
       expect(result.calcTime).toBeLessThan(2000)
     })
 
     it('should not die while processing and have a appropriate calcTime for regex attacks', () => {
-      const result = zxcvbn(`\x00\x00${'\x00'.repeat(100)}\n`)
+      const result = zxcvbn.check(`\x00\x00${'\x00'.repeat(100)}\n`)
       expect(result.calcTime).toBeLessThan(2000)
     })
   })
@@ -182,13 +219,15 @@ describe('main', () => {
   describe('password tests', () => {
     passwordTests.forEach((data) => {
       it(`should resolve ${data.password}`, () => {
-        zxcvbnOptions.setOptions({
+        const zxcvbnCustom = new ZxcvbnFactory({
           dictionary: {
             ...zxcvbnCommonPackage.dictionary,
             ...zxcvbnEnPackage.dictionary,
           },
+          graphs: zxcvbnCommonPackage.adjacencyGraphs,
+          translations: zxcvbnEnPackage.translations,
         })
-        const result = zxcvbn(data.password)
+        const result = zxcvbnCustom.check(data.password)
         result.calcTime = 0
         expect(JSON.stringify(result)).toEqual(JSON.stringify(data))
       })

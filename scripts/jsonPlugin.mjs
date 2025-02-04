@@ -1,3 +1,6 @@
+// eslint-disable-next-line import/extensions
+import compress from '@zxcvbn-ts/dictionary-compression/compress'
+
 const json = () => {
   return {
     name: 'json',
@@ -10,11 +13,18 @@ const json = () => {
 
       try {
         const parsed = JSON.parse(json)
-        const data = Array.isArray(parsed)
-          ? `"${parsed.join(',')}".split(',')`
-          : JSON.stringify(parsed)
+        let code
+        if (Array.isArray(parsed)) {
+          const encoded = compress(parsed)
 
-        const code = `export default ${data}`
+          code = `
+import decompress from '@zxcvbn-ts/dictionary-compression/decompress'
+
+export default decompress("${encoded}")`
+        } else {
+          const data = JSON.stringify(parsed)
+          code = `export default ${data}`
+        }
 
         return {
           code,

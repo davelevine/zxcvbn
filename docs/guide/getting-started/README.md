@@ -1,21 +1,25 @@
 # Getting started
+The `.mjs` build is for modern browsers and includes ES5 or higher.
+If you want to use it and want to include your own polyfills, you need to transpile it within your build process.
 
 ## Installation
 
-### npm:
+::: code-tabs#shell
 
-`npm install @zxcvbn-ts/core @zxcvbn-ts/language-common @zxcvbn-ts/language-en --save`
+@tab pnpm
 
-### yarn:
+pnpm create @zxcvbn-ts/core @zxcvbn-ts/language-common @zxcvbn-ts/language-en
+@tab yarn
 
-`yarn add @zxcvbn-ts/core @zxcvbn-ts/language-common @zxcvbn-ts/language-en`
+yarn create @zxcvbn-ts/core @zxcvbn-ts/language-common @zxcvbn-ts/language-en
+@tab npm
 
+npm install @zxcvbn-ts/core @zxcvbn-ts/language-common @zxcvbn-ts/language-en
+:::
 ## Usage
 
-### Bundler like webpack
-
 ```js
-import { zxcvbn, zxcvbnOptions } from '@zxcvbn-ts/core'
+import { ZxcvbnFactory } from '@zxcvbn-ts/core'
 import * as zxcvbnCommonPackage from '@zxcvbn-ts/language-common'
 import * as zxcvbnEnPackage from '@zxcvbn-ts/language-en'
 
@@ -29,40 +33,8 @@ const options = {
   },
 }
 
-zxcvbnOptions.setOptions(options)
-
-zxcvbn(password)
-```
-
-### As script tag
-
-Example using jsdelivr (a CDN)
-
-```
-<html>
-  <head>
-    <script src="https://cdn.jsdelivr.net/npm/@zxcvbn-ts/core@2.0.0/dist/zxcvbn-ts.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@zxcvbn-ts/language-common@2.0.0/dist/zxcvbn-ts.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@zxcvbn-ts/language-en@2.0.0/dist/zxcvbn-ts.js"></script>
-  </head>
-  <body>
-    <script>
-      ;(function () {
-        // all package will be available under zxcvbnts
-        const options = {
-          translations: zxcvbnts['language-en'].translations,
-          graphs: zxcvbnts['language-common'].adjacencyGraphs,
-          dictionary: {
-            ...zxcvbnts['language-common'].dictionary,
-            ...zxcvbnts['language-en'].dictionary,
-          },
-        }
-        zxcvbnts.core.zxcvbnOptions.setOptions(options)
-        console.log(zxcvbnts.core.zxcvbn('somePassword'))
-      })()
-    </script>
-  </body>
-</html>
+const zxcvbn = new ZxcvbnFactory(options)
+zxcvbn.check(password)
 ```
 
 ## Output
@@ -71,34 +43,41 @@ Example using jsdelivr (a CDN)
 result.guesses            # estimated guesses needed to crack password
 result.guessesLog10      # order of magnitude of result.guesses
 
-result.crackTimesSeconds # dictionary of back-of-the-envelope crack time
+result.crackTimes # dictionary of back-of-the-envelope crack time
                           # estimations, in seconds, based on a few scenarios:
 {
   # online attack on a service that ratelimits password auth attempts.
-  onlineThrottling100PerHour
+  onlineThrottlingXPerHour
 
   # online attack on a service that doesn't ratelimit,
   # or where an attacker has outsmarted ratelimiting.
-  onlineNoThrottling10PerSecond
+  onlineNoThrottlingXPerSecond
 
   # offline attack. assumes multiple attackers,
   # proper user-unique salting, and a slow hash function
   # w/ moderate work factor, such as bcrypt, scrypt, PBKDF2.
-  offlineSlowHashing1e4PerSecond
+  offlineSlowHashingXPerSecond
 
   # offline attack with user-unique salting but a fast hash
   # function like SHA-1, SHA-256 or MD5. A wide range of
   # reasonable numbers anywhere from one billion - one trillion
   # guesses per second, depending on number of cores and machines.
   # ballparking at 10B/sec.
-  offlineFastHashing1e10PerSecond
+  offlineFastHashingXPerSecond
 }
 
-result.crackTimesDisplay # same keys as result.crackTimesSeconds,
-                           # with friendlier display string values:
-                           # "less than a second", "3 hours", "centuries", etc.
+Every scenarios has a few properties
+{
+  # the seconds in which the password is cracked
+  seconds 
+  # with friendlier display string values: "less than a second", "3 hours", "centuries", etc.
+  display 
+  # the number which is used in the display to use a custom translation system and the default translation keys.
+  base 
+}
 
-result.score      # Integer from 0-4 (useful for implementing a strength bar)
+
+result.score      # Integer from 0-4 (useful for implementing a strength bar). Is configurable in the options with timeEstimationValues other wise a default value is used.
 
   0 # too guessable: risky password. (guesses < 10^3)
 
@@ -124,31 +103,3 @@ result.sequence   # the list of patterns that zxcvbn based the
 result.calcTime  # how long it took zxcvbn to calculate an answer,
                   # in milliseconds.
 ```
-
-We highly recommend always using the common and English language packages for the optimal scoring result.
-If your language is available as a package, you should import it as well. If your language is missing, feel free to open a PR. For the time being, you could extend the default set.
-
-The `esm` build is for modern browsers and includes ES5 or higher.
-If you want to use it and want to include your own polyfills, you need to transpile it within your build process.
-
-## Change prior to original library
-
-- I18n support for feedback, dictionaries and keyboard patterns. By default, the feedback are keys now
-- All dictionaries are optional, but the `en` dictionary is highly recommend (wished feature in some issues)
-- Dictionaries are separate from the core library. This means zxcvbn-ts is relatively small without its dictionaries
-- The project is a monorepo with a core library `@zxcvbn-ts/core` and language packages `@txcvbn-ts/language-en`.
-  Initially, there are only German and English language packages.
-- Keyboard layouts can be customised. This means you can overwrite the default set of layouts with your own or extend it.
-  E.g., if you are developing a Russian website, you need to include a Cyrillic keyboard set. Create a PR so that others can benefit from it.
-- You can use multiple keyboard layouts, which means that the library will check against them by default.
-- the tests are Jest based, so we get a coverage score
-- eslint/prettier for consistent code style
-- Added static page docs https://zxcvbn-ts.github.io/zxcvbn/
-- esm, commonJS and browser build
-- Custom matcher can be added which means you can create your own matcher
-- Async matcher can be added which means you can create a matcher that makes an API call
-- [haveibeenpwned](https://haveibeenpwned.com/Passwords) matcher
-- included debounce helper
-- levenshtein check for the dictionaries
-- diceware dictionary
-- extended l33t matcher for substitutions like `|_| => u`

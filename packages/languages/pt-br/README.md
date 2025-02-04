@@ -15,18 +15,20 @@ The Brazilian portuguese dictionary and language package for zxcvbn-ts
 ## Setup
 
 ```js
-import zxcvbn from '@zxcvbn-ts/core'
+import { ZxcvbnFactory } from '@zxcvbn-ts/core'
 import * as zxcvbnCommonPackage from '@zxcvbn-ts/language-common'
 import * as zxcvbnPtBrPackage from '@zxcvbn-ts/language-pt-br'
 
 const password = 'somePassword'
 const options = {
   translations: zxcvbnPtBrPackage.translations,
+  graphs: zxcvbnCommonPackage.adjacencyGraphs,
   dictionary: {
     ...zxcvbnCommonPackage.dictionary,
     ...zxcvbnPtBrPackage.dictionary,
   },
 }
 
-zxcvbn(password, options)
+const zxcvbn = new ZxcvbnFactory(options)
+zxcvbn.check(password)
 ```

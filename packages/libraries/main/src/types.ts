@@ -4,6 +4,7 @@ import { REGEXEN } from './data/const'
 import { DictionaryReturn } from './matcher/dictionary/scoring'
 import Matching from './Matching'
 import { PasswordChanges } from './matcher/dictionary/variants/matching/unmunger/getCleanPasswords'
+import Options from './Options'
 
 export type TranslationKeys = typeof translationKeys
 export type L33tTableDefault = typeof l33tTableDefault
@@ -55,7 +56,7 @@ export interface DictionaryMatch extends Match {
   pattern: 'dictionary'
   matchedWord: string
   rank: number
-  dictionaryName: DictionaryNames
+  dictionaryName: DictionaryNames | string
   reversed: boolean
   l33t: boolean
 }
@@ -130,23 +131,29 @@ export interface Estimate {
 export type MatchEstimated = MatchExtended & Estimate
 
 export interface Optimal {
-  m: Match
-  pi: Match
-  g: Match
+  m: Match[]
+  pi: Record<string, number>[]
+  g: Record<string, number>[]
+}
+
+export interface CrackTime {
+  base: number | null
+  seconds: number
+  display: string
+}
+
+export interface CrackTimes {
+  onlineThrottlingXPerHour: CrackTime
+  onlineNoThrottlingXPerSecond: CrackTime
+  offlineSlowHashingXPerSecond: CrackTime
+  offlineFastHashingXPerSecond: CrackTime
 }
 
 export interface CrackTimesSeconds {
-  onlineThrottling100PerHour: number
-  onlineNoThrottling10PerSecond: number
-  offlineSlowHashing1e4PerSecond: number
-  offlineFastHashing1e10PerSecond: number
-}
-
-export interface CrackTimesDisplay {
-  onlineThrottling100PerHour: string
-  onlineNoThrottling10PerSecond: string
-  offlineSlowHashing1e4PerSecond: string
-  offlineFastHashing1e10PerSecond: string
+  onlineThrottlingXPerHour: number
+  onlineNoThrottlingXPerSecond: number
+  offlineSlowHashingXPerSecond: number
+  offlineFastHashingXPerSecond: number
 }
 
 export interface FeedbackType {
@@ -170,6 +177,21 @@ export interface OptionsGraphEntry {
 
 export interface OptionsGraph {
   [key: string]: OptionsGraphEntry
+}
+
+export interface TimeEstimationValues {
+  scoring: {
+    0: number
+    1: number
+    2: number
+    3: number
+  }
+  attackTime: {
+    onlineThrottlingXPerHour: number
+    onlineNoThrottlingXPerSecond: number
+    offlineSlowHashingXPerSecond: number
+    offlineFastHashingXPerSecond: number
+  }
 }
 
 export interface OptionsType {
@@ -209,6 +231,10 @@ export interface OptionsType {
    * @default 256
    */
   maxLength?: number
+  /**
+   * @description Define the values to calculate the scoring and attack times. DO NOT CHANGE unless you know what you are doing. The default values are just fine as long as you are using a strong, slow hash function. Can be adjusted to account for increasingly powerful attacker hardware.
+   */
+  timeEstimationValues?: TimeEstimationValues
 }
 
 export interface RankedDictionary {
@@ -220,26 +246,34 @@ export interface RankedDictionaries {
 }
 
 export type DefaultFeedbackFunction = (
+  options: Options,
   match: MatchEstimated,
   isSoleMatch?: boolean,
 ) => FeedbackType | null
 
 export type DefaultScoringFunction = (
   match: MatchExtended | MatchEstimated,
+  options: Options,
 ) => number | DictionaryReturn
 
+export interface UserInputsOptions {
+  rankedDictionary: RankedDictionary
+  rankedDictionaryMaxWordSize: number
+}
 export interface MatchOptions {
   password: string
   /**
    * @description This is the original Matcher so that one can use other matchers to define a baseGuess. An usage example is the repeat matcher
    */
   omniMatch: Matching
+  userInputsOptions?: UserInputsOptions
 }
 
-export type MatchingType = new () => {
+export type MatchingType = new (options: Options) => {
   match({
     password,
     omniMatch,
+    userInputsOptions,
   }: MatchOptions): MatchExtended[] | Promise<MatchExtended[]>
 }
 
@@ -257,8 +291,7 @@ export type Score = 0 | 1 | 2 | 3 | 4
 
 export interface ZxcvbnResult {
   feedback: FeedbackType
-  crackTimesSeconds: CrackTimesSeconds
-  crackTimesDisplay: CrackTimesDisplay
+  crackTimes: CrackTimes
   score: Score
   password: string
   guesses: number

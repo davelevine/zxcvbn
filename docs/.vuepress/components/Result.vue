@@ -24,23 +24,23 @@
     </tr>
     <tr>
       <td>100 / hour:</td>
-      <td>{{ result.crackTimesDisplay.onlineThrottling100PerHour }}</td>
+      <td>{{ result.crackTimes.onlineThrottlingXPerHour.display }}</td>
       <td>(throttled online attack)</td>
     </tr>
     <tr>
       <td>10&nbsp; / second:</td>
-      <td>{{ result.crackTimesDisplay.onlineNoThrottling10PerSecond }}</td>
+      <td>{{ result.crackTimes.onlineNoThrottlingXPerSecond.display }}</td>
       <td>(unthrottled online attack)</td>
     </tr>
     <tr>
       <td>10k / second:</td>
-      <td>{{ result.crackTimesDisplay.offlineSlowHashing1e4PerSecond }}</td>
+      <td>{{ result.crackTimes.offlineSlowHashingXPerSecond.display }}</td>
       <td>(offline attack, slow hash, many cores)</td>
     </tr>
 
     <tr>
       <td>10B / second:</td>
-      <td>{{ result.crackTimesDisplay.offlineFastHashing1e10PerSecond }}</td>
+      <td>{{ result.crackTimes.offlineFastHashingXPerSecond.display }}</td>
       <td>(offline attack, fast hash, many cores)</td>
     </tr>
     <tr v-if="result.feedback.warning">
@@ -58,21 +58,12 @@
   </table>
 </template>
 
-<script>
-export default {
-  name: 'ZxcvbnResult',
-  props: {
-    result: {
-      type: Object,
-      default() {
-        return {}
-      },
-    },
-  },
-  computed: {
-    hasSuggestions() {
-      return this.result.feedback.suggestions.length > 0
-    },
-  },
-}
+<script setup>
+import { computed } from 'vue'
+
+const props = defineProps(['result'])
+
+const hasSuggestions = computed(() => {
+  return props.result.feedback.suggestions.length > 0
+})
 </script>

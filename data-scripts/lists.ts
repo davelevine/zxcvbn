@@ -12,7 +12,6 @@ export interface LanguageListEntry {
   options?: {
     [key: string]: any
   }
-  // eslint-disable-next-line @typescript-eslint/ban-types
   generator?: Function
   customList?: boolean
 }
@@ -49,6 +48,25 @@ export default {
         'https://raw.githubusercontent.com/arineng/arincli/master/lib/last-names.txt',
     },
   },
+  'da-dk': {
+    commonWords: {
+      source:
+        'https://raw.githubusercontent.com/hermitdave/FrequencyWords/master/content/2018/da/da_50k.txt',
+      options: { hasOccurrences: true },
+    },
+    maleFirstnames: {
+      source:
+        'https://raw.githubusercontent.com/n0kovo/danish-wordlists/main/first_names_male_2021.txt',
+    },
+    femaleFirstnames: {
+      source:
+        'https://raw.githubusercontent.com/n0kovo/danish-wordlists/main/first_names_female_2021.txt',
+    },
+    lastnames: {
+      source:
+        'https://raw.githubusercontent.com/n0kovo/danish-wordlists/main/last_names_2021.txt',
+    },
+  },
   'pl': {
     commonWords: {
       source:
@@ -57,12 +75,12 @@ export default {
     },
     maleFirstnames: {
       source:
-        'https://api.dane.gov.pl/resources/36411,lista-imion-meskich-w-rejestrze-pesel-stan-na-24012022-imie-pierwsze/csv',
+        'https://api.dane.gov.pl/resources/42873,lista-imion-meskich-w-rejestrze-pesel-stan-na-24012022-imie-pierwsze/csv',
       options: polishFirstnamesOptions,
     },
     femaleFirstnames: {
       source:
-        'https://api.dane.gov.pl/resources/36412,lista-imion-zenskich-w-rejestrze-pesel-stan-na-24012022-imie-pierwsze/csv',
+        'https://api.dane.gov.pl/resources/42874,lista-imion-zenskich-w-rejestrze-pesel-stan-na-24012022-imie-pierwsze/csv',
       options: polishFirstnamesOptions,
     },
     maleLastnames: {
@@ -217,7 +235,7 @@ export default {
     },
     names: {
       source:
-        'https://gist.githubusercontent.com/bagaswastu/35c80cdd8c32ca0b6aafa119e80e93ef/raw/13c57d71a3eaea0f59823eca5d22d1fb270aa56c/indonesia_names.txt',
+        'https://gist.githubusercontent.com/bgwastu/35c80cdd8c32ca0b6aafa119e80e93ef/raw/13c57d71a3eaea0f59823eca5d22d1fb270aa56c/indonesia_names.txt',
     },
   },
   'es-es': {

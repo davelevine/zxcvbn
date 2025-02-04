@@ -4,9 +4,12 @@
 
 Current supported languages:
 
+- Arabic
+- Czech
+- Danish (Denmark)
 - German
 - English
-- Spain (Spain)
+- Spanish (Spain)
 - Finnish
 - French
 - Indonesia
@@ -14,7 +17,7 @@ Current supported languages:
 - Japanese
 - Dutch (Belgium)
 - Polish
-- Portuguese (Brazilian)
+- Portuguese (Brazil)
 
 ## Feedback
 
@@ -23,7 +26,7 @@ If you don't have an own translation system or want to use predefined translatio
 Each language pack has its own translation file that you can use like this:
 
 ```js
-import { zxcvbn, zxcvbnOptions } from '@zxcvbn-ts/core'
+import { ZxcvbnFactory } from '@zxcvbn-ts/core'
 import { translations } from '@zxcvbn-ts/language-en'
 
 const password = 'somePassword'
@@ -31,9 +34,8 @@ const options = {
   translations,
 }
 
-zxcvbnOptions.setOptions(options)
-
-zxcvbn(password)
+const zxcvbn = new ZxcvbnFactory(options)
+zxcvbn.check(password)
 ```
 
 ## Dictionary
@@ -43,7 +45,7 @@ This makes the library tiny but inefficient compared to the original library.
 It is recommended to use at least the common and english language package.
 
 ```js
-import { zxcvbn, zxcvbnOptions } from '@zxcvbn-ts/core'
+import { ZxcvbnFactory } from '@zxcvbn-ts/core'
 import * as zxcvbnCommonPackage from '@zxcvbn-ts/language-common'
 import * as zxcvbnEnPackage from '@zxcvbn-ts/language-en'
 
@@ -55,9 +57,8 @@ const options = {
   },
 }
 
-zxcvbnOptions.setOptions(options)
-
-zxcvbn(password)
+const zxcvbn = new ZxcvbnFactory(options)
+zxcvbn.check(password)
 ```
 
 ## Keyboard patterns
@@ -66,7 +67,7 @@ By default, `zxcvbn-ts` don't use any keyboard patterns to let the developer dec
 It is recommended to use at least the common keyboard patterns.
 
 ```js
-import { zxcvbn, zxcvbnOptions } from '@zxcvbn-ts/core'
+import { ZxcvbnFactory } from '@zxcvbn-ts/core'
 import * as zxcvbnCommonPackage from '@zxcvbn-ts/language-common'
 
 const password = 'somePassword'
@@ -74,9 +75,8 @@ const options = {
   graphs: zxcvbnCommonPackage.adjacencyGraphs,
 }
 
-zxcvbnOptions.setOptions(options)
-
-zxcvbn(password)
+const zxcvbn = new ZxcvbnFactory(options)
+zxcvbn.check(password)
 ```
 
 ## Add a new language package

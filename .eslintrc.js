@@ -94,7 +94,6 @@ module.exports = {
         object: true,
       },
     ],
-    '@typescript-eslint/ban-types': 'error',
   },
   overrides: [
     {
@@ -117,6 +116,13 @@ module.exports = {
       ],
       rules: {
         'import/no-relative-packages': 'off',
+      },
+    },
+    {
+      files: ['./scripts/rollup.config.mjs', './scripts/jsonPlugin.mjs'],
+      rules: {
+        'compat/compat': 'off',
+        'max-statements': 'off',
       },
     },
   ],
